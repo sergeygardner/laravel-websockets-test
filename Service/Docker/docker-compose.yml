@@ -1,0 +1,49 @@
+version: '3.8'
+services:
+  web-socket-php:
+    build:
+      context: ../../
+      dockerfile: ./Service/Docker/Dockerfile
+    command: sh /run/run-php-dev.sh
+    container_name: "web-socket-php"
+    environment:
+      TZ: "Europe/Moscow"
+    env_file:
+      - ../../App/.env
+      - ../../App/.env.local
+    networks:
+      service-database-web-socket-network:
+    ports:
+      - "8000:8000"
+      - "6001:6001"
+    expose:
+      - 8000
+      - 6001
+    restart: always
+    tty: true
+    volumes:
+      - ../../App:/app:cached
+      - ../php.d/99-projects.ini:/usr/local/etc/php/conf.d/99-projects.ini:ro
+      - ../../App/var/composer/cache/:/root/.composer/cache/:delegated
+      - ../run/run-php-dev.sh:/run/run-php.sh:delegated
+      - ~/.ssh/:/root/.ssh/
+      - ~/.ssh/:/home/www/.ssh/
+  web-socket-database:
+    container_name: "web-socket-database"
+    environment:
+      MARIADB_ROOT_PASSWORD: laravel
+      MARIADB_DATABASE: laravel
+      MARIADB_USER: laravel
+      MARIADB_PASSWORD: laravel
+    image: mariadb
+    networks:
+      service-database-web-socket-network:
+        aliases:
+          - database.local
+    restart: always
+    expose:
+      - 3306
+
+networks:
+  service-database-web-socket-network:
+    name: service-database-web-socket
